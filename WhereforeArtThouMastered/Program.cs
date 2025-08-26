@@ -87,8 +87,13 @@ namespace WhereforeArtThouMastered
                 var recordLogString = GetLogString(record, true);
 
                 // Start the recursive search on the current record.
-                FindMasterReferences(record, new List<string>(), newFormKeysInMaster, state, recordLogString,
+                bool found =FindMasterReferences(record, new List<string>(), newFormKeysInMaster, state, recordLogString,
                     new HashSet<object>());
+                
+                if (Settings.Value.VerboseMode && !found)
+                {
+                    Console.WriteLine($"{recordLogString} does not contain any references to {targetModKey.FileName}");
+                }
             }
 
             Console.WriteLine("Search complete.");
@@ -122,7 +127,7 @@ namespace WhereforeArtThouMastered
         /// <param name="state">The patcher state, used for resolving links for logging.</param>
         /// <param name="rootRecordLogString">The string identifier of the top-level record being searched.</param>
         /// <param name="visitedObjects">A set of visited object references to prevent infinite loops from cyclical references.</param>
-        private static void FindMasterReferences(
+        private static bool FindMasterReferences(
             object? currentObject,
             List<string> currentPath,
             HashSet<FormKey> masterFormKeys,
@@ -131,16 +136,16 @@ namespace WhereforeArtThouMastered
             HashSet<object> visitedObjects)
         {
             // --- Pre-check and Cycle Prevention ---
-            if (currentObject == null) return;
+            if (currentObject == null) return false;
 
             // For reference types, adding to the HashSet prevents infinite recursion. This is crucial.
             // For value types, this check is less effective but harmless.
-            if (currentObject is not ValueType && !visitedObjects.Add(currentObject)) return;
+            if (currentObject is not ValueType && !visitedObjects.Add(currentObject)) return false;
 
             var type = currentObject.GetType();
 
             // We don't need to reflect into primitives, enums, or strings.
-            if (type.IsPrimitive || type.IsEnum || type == typeof(string)) return;
+            if (type.IsPrimitive || type.IsEnum || type == typeof(string)) return false;
 
             // --- Base Case: Found a FormLink ---
             if (currentObject is IFormLinkGetter formLink)
@@ -150,10 +155,11 @@ namespace WhereforeArtThouMastered
                     var pathString = string.Join(" -> ", currentPath);
                     var targetRecordString = GetLogStringForLink(formLink, state);
                     Console.WriteLine($"{rootRecordLogString} -> {pathString} -> {targetRecordString}");
+                    return true; // Match found!
                 }
 
-                // Per your request, stop searching this branch once a link is found.
-                return;
+                // This is a link, but not one we're looking for. Stop this path.
+                return false;
             }
 
             // --- Recursive Step 1: Collections ---
@@ -168,7 +174,11 @@ namespace WhereforeArtThouMastered
                     {
                         // Append the index to the last property name, e.g., "Keywords" becomes "Keywords[0]"
                         newPath[^1] = $"{newPath.Last()}[{i++}]";
-                        FindMasterReferences(item, newPath, masterFormKeys, state, rootRecordLogString, visitedObjects);
+                        if (FindMasterReferences(item, newPath, masterFormKeys, state, rootRecordLogString,
+                                visitedObjects))
+                        {
+                            return true;
+                        }
                     }
                 }
 
@@ -198,9 +208,14 @@ namespace WhereforeArtThouMastered
 
                 // Create the path for the next level of recursion
                 var newPath = new List<string>(currentPath) { property.Name };
-                FindMasterReferences(propertyValue, newPath, masterFormKeys, state, rootRecordLogString,
-                    visitedObjects);
+                if (FindMasterReferences(propertyValue, newPath, masterFormKeys, state, rootRecordLogString,
+                        visitedObjects))
+                {
+                    return true;
+                }
             }
+            // If we've searched everything in this object and found nothing, return false.
+            return false;
         }
 
         /// <summary>
