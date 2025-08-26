@@ -182,12 +182,12 @@ namespace WhereforeArtThouMastered
                     }
                 }
 
-                return; // After handling a collection's items, we don't need to check the collection's own properties.
+                return false; // After handling a collection's items, we don't need to check the collection's own properties.
             }
 
             // --- Recursive Step 2: Complex Objects ---
             // To avoid reflecting over the entire .NET framework, we'll focus on types from Mutagen.
-            if (type.Namespace == null || !type.Namespace.StartsWith("Mutagen")) return;
+            if (type.Namespace == null || !type.Namespace.StartsWith("Mutagen")) return false;
 
             // Get all public properties of the object
             foreach (var property in type.GetProperties(BindingFlags.Public | BindingFlags.Instance))
