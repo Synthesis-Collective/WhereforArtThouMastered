@@ -1,0 +1,16 @@
+{
+  "Nickname": "",
+  "Visibility": "IncludeButHide",
+  "OneLineDescription": "Helps figure out why some plugin lists another plugin as master",
+  "LongDescription": "",
+  "PreferredAutoVersioning": "Default",
+  "RequiredMods": [],
+  "TargetedReleases": [
+    "SkyrimLE",
+    "SkyrimSE",
+    "SkyrimVR",
+    "EnderalLE",
+    "EnderalSE",
+    "SkyrimSEGog"
+  ]
+}
