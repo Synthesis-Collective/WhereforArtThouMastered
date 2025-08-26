@@ -1,6 +1,6 @@
 {
   "Nickname": "",
-  "Visibility": "IncludeButHide",
+  "Visibility": "Include",
   "OneLineDescription": "Helps figure out why some plugin lists another plugin as master",
   "LongDescription": "",
   "PreferredAutoVersioning": "Default",
