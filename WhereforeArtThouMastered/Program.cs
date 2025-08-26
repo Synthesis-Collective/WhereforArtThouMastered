@@ -92,7 +92,7 @@ namespace WhereforeArtThouMastered
                 
                 if (Settings.Value.VerboseMode && !found)
                 {
-                    Console.WriteLine($"{recordLogString} does not contain any references to {targetModKey.FileName}");
+                    Console.WriteLine($"{recordLogString} does not contain any references to {candidateMasterKey.FileName}");
                 }
             }
 
